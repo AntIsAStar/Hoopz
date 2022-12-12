@@ -7,7 +7,6 @@ local cursor = localPlr.PlayerGui.PowerUI.CursorButton
 local monkey = getconnections(cursor.MouseButton1Click)[1].Function
 
 --[[GLOBAL VARS]]
-getgenv().aimbot = true
 local orderTable = nil
 local overwrite = nil
 
