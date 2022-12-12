@@ -1,0 +1,66 @@
+
+--[[ESSENTIAL VARS]]--
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local shooting = replicatedStorage:FindFirstChild("shootingEvent")
+local localPlr = game.Players.LocalPlayer
+local cursor = localPlr.PlayerGui.PowerUI.CursorButton
+local monkey = getconnections(cursor.MouseButton1Click)[1].Function
+
+--[[GLOBAL VARS]]
+getgenv().aimbot = true
+local orderTable = nil
+local overwrite = nil
+
+--[[MAGNITUDE FUNC]]--
+function closestHoop()
+    local mh = math.huge
+    local target,dist = nil, nil
+    for i, v in pairs(workspace:GetChildren()) do
+        if v.Name == "Courts" or v.Name == "PracticeArea" then
+            for x, d in pairs(v:GetDescendants()) do
+                if d:IsA("Part") and d.Name == "FieldGoal" then
+                    local mag = (localPlr.Character.HumanoidRootPart.Position - d.Position).Magnitude
+                    if mag < mh then
+                        mh = mag
+                        target = d
+                    end
+                end
+            end
+        end
+    end
+    return target, mh
+end
+
+--[[RETRIEVE ORDER]]--
+for i,v in pairs(getupvalues(monkey)) do 
+    if type(v) == "table" and table.find(v, "X1") then 
+        orderTable = v
+    end 
+end
+
+--[[SCRAMBLE FUNC]]--
+function organize(pos2, pos3, scram)
+	local argTable = {
+		X1 = pos2.X, 
+		Y1 = pos2.Y, 
+		Z1 = pos2.Z, 
+		X2 = pos3.X, 
+		Y2 = pos3.Y, 
+		Z2 = pos3.Z
+	}
+	return {argTable[scram[1]], argTable[scram[2]], argTable[scram[3]], argTable[scram[4]], argTable[scram[5]], argTable[scram[6]]}
+end
+
+--[[OVERWRITE ARGS)]]--
+overwrite = hookfunction(shooting.FireServer, function(self, ...)
+    local args = {...}
+    if self == shooting and not checkcaller() and getgenv().aimbot then
+	local hoop = closestHoop()
+        local char = localPlr.Character or localPlr.CharacterAdded:Wait()
+        local rootPosition = char.HumanoidRootPart.Position
+        local unScrambled = organize(rootPosition, (hoop.Position - rootPosition + Vector3.new(0, 50, 0)).unit, orderTable)
+        args[3] = unScrambled
+        return overwrite(self, table.unpack(args))
+    end 
+    return overwrite(self, ...)
+end)
